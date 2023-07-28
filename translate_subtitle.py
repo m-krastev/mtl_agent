@@ -18,10 +18,9 @@ def parse_assline(line):
 def convert_assline(_list):
     return ass_tag_parser.compose_ass(_list)
 
-
 def change_roboto_to_trebuchet(styles):
     for style in styles:
-        if style.fontname == "Roboto Medium":
+        if any(x in style.fontname for x in ("Roboto", "Arial")):
             style.fontname = "Trebuchet MS"
             # style.bold = True
     return styles

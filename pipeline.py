@@ -10,7 +10,7 @@ import argparse
 from pathlib import Path
 
 
-SECRETS = Path(r"secrets.json")
+SECRETS = Path(__file__).parent /  "secrets.json"
 TRANSLATIONS_PATH = SECRETS.parent / "Translations"
 
 async def main():

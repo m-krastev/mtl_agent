@@ -100,6 +100,8 @@ async def animes_portal(browser: Browser, final_url: str, episode_num: int, anim
     await page.click("#anime > div.modal.modalOverlay.modal-smaller.visible > div > div.container.rel > div > form > div.row > input.btn.btn-primary.green")
     print("File uploaded to animes-portal")
     
+    await page.close()
+    
 
 async def animes_portal_wall(browser: Browser, final_url: str, animes_portal_wall_url = "", post_description: str = ""):
     if animes_portal_wall_url == "":
@@ -124,3 +126,5 @@ async def animes_portal_wall(browser: Browser, final_url: str, animes_portal_wal
     
     textarea = await page.J("#comments > form > span > textarea")
     await textarea.press("Enter", delay=1)
+    
+    await page.close()
