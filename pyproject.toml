@@ -1,0 +1,22 @@
+[project]
+name = "mtl_agent"
+version = "0.1.2"
+dependencies = ["ass_tag_parser", "ass", "pyppeteer", "ffmpeg-python", "pillow", "requests"]
+authors = [{name="Matey Krastev", email="matey.krastev@outlook.com"}]
+license={text="MIT"}
+readme = "README.md"
+requires-python = ">=3.7"
+
+[project.scripts]
+mtl_agent = "mtl_agent.__main__:main"
+mtl_pipeline = "mtl_agent.pipeline:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["mtl_agent"]
+# [build-system]
+# requires = ["hatchling"]
+# build-backend = "hatchling.build"
