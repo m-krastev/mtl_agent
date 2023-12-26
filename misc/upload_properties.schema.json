@@ -1,0 +1,72 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Generated schema for Root",
+    "type": "object",
+    "properties": {
+        "title": {
+            "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "episode_parser": {
+            "type": "string"
+        },
+        "tags": {
+            "type": "string"
+        },
+        "upload_to_vbox": {
+            "type": "boolean"
+        },
+        "animes_portal": {
+            "type": "string"
+        },
+        "animes_portal_wall": {
+            "type": "string"
+        },
+        "thumbnail_path": {
+            "type": "string"
+        },
+        "thumbnail_font": {
+            "type": "object",
+            "properties": {
+                "font_name": {
+                    "type": "string"
+                },
+                "factor": {
+                    "type": "number"
+                },
+                "text_fill": {
+                    "type": "string"
+                },
+                "stroke_fill": {
+                    "type": "string"
+                },
+                "stroke_width": {
+                    "type": "string"
+                },
+                "font_weight": {
+                    "type": "number"
+                },
+                "x": {
+                    "type": "number"
+                },
+                "y": {
+                    "type": "number"
+                }
+            },
+            "required": [
+            ]
+        }
+    },
+    "required": [
+        "title",
+        "description",
+        "episode_parser",
+        "tags",
+        "upload_to_vbox",
+        "animes_portal",
+        "animes_portal_wall",
+        "thumbnail_path"
+    ]
+}

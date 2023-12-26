@@ -1,7 +1,5 @@
-# %%
-# get_subtitle_file
-# "ffmpeg -i "[Erai-raws] Zom 100 - Zombie ni Naru made ni Shitai 100 no Koto - 01 [1080p][HEVC][Multiple Subtitle][E5FE755A].mkv" -t 0:2 subtitle.ass"
-
+import logging
+from pathlib import Path
 from typing import Callable
 import ass
 import ass_tag_parser
@@ -11,6 +9,9 @@ import re
 from requests import post
 from itertools import chain
 
+from mtl_agent.video_work import extract_subtitle
+
+
 def parse_assline(line):
     return ass_tag_parser.parse_ass(line)
 
@@ -18,15 +19,25 @@ def parse_assline(line):
 def convert_assline(_list):
     return ass_tag_parser.compose_ass(_list)
 
-def change_roboto_to_trebuchet(styles):
+
+def change_styles(styles):
     for style in styles:
-        if any(x in style.fontname for x in ("Roboto", "Arial")):
+        if any(
+            x in style.fontname
+            for x in ("Roboto", "Arial", "Rosario", "Open Sans", "Calibri")
+        ):
             style.fontname = "Trebuchet MS"
+            if style.fontsize < 21:
+                style.fontsize = 22
+                style.margin_v = 20
             # style.bold = True
+
     return styles
 
 
-def translate_subtitle_google(filepath: str, output_file: str, styling_function: Callable, path_to_secrets):
+def translate_subtitle_google(
+    filepath: str, output_file: str, styling_function: Callable, path_to_secrets
+):
     with open(filepath) as f:
         sub = ass.parse(f)
     lines = [x.text for x in sub.events]
@@ -38,23 +49,12 @@ def translate_subtitle_google(filepath: str, output_file: str, styling_function:
     stack = []
     for line in lines:
         stack.append(re.sub(r"\{(.+?)\}", r"<\1>", line).replace(r"\N", "<c>"))
-        # line = parse_assline(line)
-        # stack_2 = []
-        # for x in line:
-        #     if not isinstance(x, ass_tag_parser.AssText):
-        #         continue
-
-        #     stack_2.append(x.text)
-        # stack.append("".join(stack_2).replace(r'\N','<code>0</code>'))
-
-    # stack = ["<br><br>".join(stack)]
 
     # translate
     with open(path_to_secrets) as f:
         secrets = json.load(f)
-        
-    from google.cloud import translate
 
+    from google.cloud import translate
 
     def translate_lines_google(
         text: list[str],
@@ -87,23 +87,16 @@ def translate_subtitle_google(filepath: str, output_file: str, styling_function:
             }
         )
 
-        # Display the translation for each input text provided
-        # for translation in response.translations:
-        #     print(f"Translated text: {translation.translated_text}")
-
         return response
 
     translations = translate_lines_google(
         stack, secrets["project_id"], secrets["glossary_id"]
     )
-    #####
 
-    # convert back to ass file
+    ############### convert back to ass file ##############
     stack_translated = [i.translated_text for i in translations.translations]
-    # stack_translated = translations.translations[0].translated_text.split("<br><br>")
     print(stack_translated)
-    # stack_translated = lines
-    # i = 0
+
     for j, line in enumerate(stack_translated):
         sub.events[j].text = re.sub(
             r"<(.+?)>", r"{\1}", unescape(line).replace("<c>", r"\N")
@@ -132,25 +125,29 @@ def translate_subtitle_google(filepath: str, output_file: str, styling_function:
     return output_file
 
 
-
-def translate_subtitle_deepl(input_file, output_file, style_function: Callable, path_to_secrets):
+def translate_subtitle_deepl(
+    input_file, output_file, style_function: Callable, path_to_secrets
+):
     with open(input_file, encoding="utf8") as f:
         sub = ass.parse(f)
 
     sub.styles = style_function(sub.styles)
 
     lines = [x.text for x in sub.events]
-    
+
     # preprocessing step to avoid mistranslation of supposedly capital case
-    lines = [re.sub(r'\b([A-Z]+)\b', lambda x: f"{x[1].title()}", line) for line in lines]
+    lines = [
+        re.sub(r"\b([A-Z]+)\b", lambda x: f"{x[1].title()}", line) for line in lines
+    ]
 
     stack = [
         re.sub(r"\{(.+?)\}", r"<\1>", line).replace(r"\N", "<c>") for line in lines
     ]
 
     batchsize = 32
-    stack = ["<z>".join(stack[i : i + batchsize]) for i in range(0, len(stack), batchsize)]
-
+    stack = [
+        "<z>".join(stack[i : i + batchsize]) for i in range(0, len(stack), batchsize)
+    ]
 
     with open(path_to_secrets) as f:
         secrets = json.load(f)
@@ -164,6 +161,9 @@ def translate_subtitle_deepl(input_file, output_file, style_function: Callable, 
             "non_splitting_tags": [
                 "code",
                 "c",
+                "2c",
+                "3c",
+                "4c",
                 "i",
                 "an",
                 "b",
@@ -185,37 +185,85 @@ def translate_subtitle_deepl(input_file, output_file, style_function: Callable, 
         )
         # print(response)
         if response.status_code != 200:
+            logging.exception(
+                f"Translation failed with response {response.status_code} and data: {response.text}"
+            )
             raise Exception("Translation unsuccessful")
         # print(response.json())
 
         return response.json()
 
-    deepl_auth_key = secrets["deepl_auth_key"]
-    translated = deepl_translate(stack, deepl_auth_key)
-    
+    translated = deepl_translate(stack, secrets["deepl_auth_key"])
+
     # processing step to transpose the rogue commas
-    stack =  "stacc".join([i["text"] for i in translated["translations"]])
-    stack = re.sub(r'\s*(<z>|<c>)\s*([,.;:])', r'\2\1', stack)
+    stack = "stacc".join([i["text"] for i in translated["translations"]])
+    stack = re.sub(r"\s*(<z>|<c>)\s*([,.;:])", r"\2\1", stack)
     stack = stack.split("stacc")
     ##############
-
 
     stack = [
         re.sub(r"<(.+?)>", r"{\1}", j.replace("<c>", r"\N"))
         for j in chain.from_iterable([i.split("<z>") for i in stack])
     ]
 
+    j = 0
     for i, line in enumerate(stack):
-        sub.events[i].text = line
+        # if not ("Default" in sub.events[i].style):
+        #     continue
+        sub.events[j].text = line
+        j += 1
 
-    with open(output_file, "w",encoding="utf8") as f:
+    with open(output_file, "w", encoding="utf8") as f:
         sub.dump_file(f)
-    
+
     return output_file
 
-if __name__ == "__main__":
-    translate_subtitle_google(
-        r"C:\Users\matey\Videos\Content\SukinaKo\[SubsPlease] Suki na Ko ga Megane wo Wasureta - 03 (1080p) [BFE26D78].ass", 
-        change_roboto_to_trebuchet,   
-        r"C:\MEGA\Subtitles\[Scripts]\mtl_agent\secrets.json")
-    pass
+
+def translate(args):
+    INPUT_FILE = Path(args.file).resolve()
+
+    ##################### subtitle checks and translation
+    if args.subtitle:
+        SUBTITLE_FILE = Path(args.subtitle).resolve()
+        if SUBTITLE_FILE.suffix != ".ass":
+            logging.error(
+                "You must use ASS (Substation Alpha) subtitle files! Exiting..."
+            )
+            exit(1)
+
+    else:
+        SUBTITLE_FILE = INPUT_FILE.with_stem(
+            INPUT_FILE.stem + "_translated"
+        ).with_suffix(".ass")
+
+    ###################### check if subtitle exists and if not, translates it
+    if SUBTITLE_FILE.exists():
+        logging.info(f"Subtitle file found: {SUBTITLE_FILE.name}")
+        return SUBTITLE_FILE
+
+    ###################### no file exists
+    subtitle = INPUT_FILE.with_suffix(".ass")
+    if not subtitle.exists():
+        subtitle = extract_subtitle(str(INPUT_FILE), str(subtitle), args.subtitle_track)
+        logging.info(f"Subtitle extracted: {subtitle}")
+
+    subtitle = (
+        translate_subtitle_google(
+            subtitle, SUBTITLE_FILE, change_styles, path_to_secrets=args.secrets
+        )
+        if args.translation_provider == "google"
+        else translate_subtitle_deepl(
+            subtitle,
+            SUBTITLE_FILE,
+            change_styles,
+            path_to_secrets=args.secrets,
+        )
+    )
+
+    # Backup to MEGA
+    backup = Path(args.backup_path) / SUBTITLE_FILE.parent.name / SUBTITLE_FILE.name
+    backup.parent.mkdir(exist_ok=True)
+    backup.write_text(SUBTITLE_FILE.read_text())
+    logging.info(f"Successfully translated! Backup at {backup}")
+
+    return SUBTITLE_FILE
