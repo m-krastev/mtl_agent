@@ -1,11 +1,12 @@
 [project]
 name = "mtl_agent"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = ["ass_tag_parser", "ass", "playwright", "ffmpeg-python", "pillow", "requests"]
 authors = [{name="Matey Krastev", email="matey.krastev@outlook.com"}]
 license={text="MIT"}
 readme = "README.md"
 requires-python = ">=3.7"
+description = "MTL agent for media processing"
 
 [project.scripts]
 mtl_agent = "mtl_agent.__main__:main"
