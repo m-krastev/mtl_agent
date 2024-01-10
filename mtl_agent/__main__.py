@@ -10,7 +10,6 @@ from pathlib import Path
 ROOT = Path.home() / ".config" / "mtl_agent"
 
 def get_parser():
-    print("this")
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--headless",
