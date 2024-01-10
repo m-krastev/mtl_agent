@@ -162,3 +162,5 @@ cython_debug/
 *secret*
 glossaries/
 Translations/
+.vscode
+experiments*

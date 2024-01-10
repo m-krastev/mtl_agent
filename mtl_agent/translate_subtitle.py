@@ -233,14 +233,13 @@ def translate(args):
 
     else:
         SUBTITLE_FILE = INPUT_FILE.with_stem(
-            INPUT_FILE.stem + "_translated"
+            INPUT_FILE.stem + ".bg"
         ).with_suffix(".ass")
 
     ###################### check if subtitle exists and if not, translates it
     if SUBTITLE_FILE.exists():
         logging.info(f"Subtitle file found: {SUBTITLE_FILE.name}")
         return SUBTITLE_FILE
-
     ###################### no file exists
     subtitle = INPUT_FILE.with_suffix(".ass")
     if not subtitle.exists():
@@ -263,7 +262,7 @@ def translate(args):
     # Backup to MEGA
     backup = Path(args.backup_path) / SUBTITLE_FILE.parent.name / SUBTITLE_FILE.name
     backup.parent.mkdir(exist_ok=True)
-    backup.write_text(SUBTITLE_FILE.read_text())
+    backup.write_text(SUBTITLE_FILE.read_text(),'utf8')
     logging.info(f"Successfully translated! Backup at {backup}")
 
     return SUBTITLE_FILE
