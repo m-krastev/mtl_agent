@@ -64,7 +64,7 @@ async def change_vbox_thumbnail(
     src = await page.eval_on_selector("#html5player", "(e) => e.src")
     if not src:
         # if await page.title() != props["title"].format(episode_num):
-        await page.wait_for_url()
+        await page.wait_for_selector("#html5player[data-src]")
 
     await page.goto(f"https://www.vbox7.com/video/{vbox_link.rpartition(':')[-1]}/edit")
 
@@ -213,9 +213,7 @@ async def upload(file: Path, args):
     description = props.get("description", "")
     tags = props.get("tags", "")
 
-    final_url = args.video_url or await vbox(
-        browser, file, title, description, tags
-    )
+    final_url = args.video_url or await vbox(browser, file, title, description, tags)
 
     if args.thumb and props.get("thumbnail_path"):
         if props.get("thumbnail_font"):

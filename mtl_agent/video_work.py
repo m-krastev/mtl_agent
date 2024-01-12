@@ -19,7 +19,7 @@ def extract_thumbnail(filepath, output_file):
         .output(output_file, frames=1)
         .overwrite_output()
     )
-    print(input.get_args())
+    logging.info(f"Extracting thumbnail with args: {input.get_args()}")
     input.run()
     return output_file
 
@@ -116,7 +116,6 @@ async def encode(input_file: Path, subtitle_file, args):
             str(input_file), str(subtitle_file), str(output_file)
         )
     )
-    print("hello")
     logging.info(f"Encoding video file with config: {ffmpeg_args}")
 
     from asyncio import subprocess

@@ -9,7 +9,7 @@ import re
 from requests import post
 from itertools import chain
 
-from mtl_agent.video_work import extract_subtitle
+from .video_work import extract_subtitle
 
 
 def parse_assline(line):
@@ -95,7 +95,6 @@ def translate_subtitle_google(
 
     ############### convert back to ass file ##############
     stack_translated = [i.translated_text for i in translations.translations]
-    print(stack_translated)
 
     for j, line in enumerate(stack_translated):
         sub.events[j].text = re.sub(

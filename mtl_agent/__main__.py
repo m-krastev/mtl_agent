@@ -175,7 +175,7 @@ def main():
         exit(1)
 
     if args.headless and args.headless not in INPUT_FILE.parts:
-        print("Headless mode invoked in non-automatically managed folder. Exiting...")
+        logging.error("Headless mode invoked in non-automatically managed folder. Exiting...")
         exit(1)
 
     match args.func.__name__:
@@ -183,19 +183,16 @@ def main():
             args.backup_path = args.backup_path or args.root / "Translations"
             args.secrets = args.secrets or args.root / "secrets.json"
             out = translate(args)
-            print(out)
 
         case "encode":
             subtitle_file = Path(args.subtitle).resolve()
             out = asyncio.run(encode(INPUT_FILE, subtitle_file, args))
-            print(out)
 
         case "upload":
             args.profile_path = args.profile_path or args.root / "profile_default.json"
 
             output_file = Path(args.file).resolve()
             out = asyncio.run(upload(output_file, args))
-            print(out)
 
         case "pipeline":
             args.profile_path = args.profile_path or args.root / "profile_default.json"
@@ -205,7 +202,7 @@ def main():
             args.secrets = args.secrets or args.root / "secrets.json"
             args.secrets = Path(args.secrets).resolve()
             out = asyncio.run(pipeline(INPUT_FILE, args))
-            print(out)
 
+    print(out)
 if __name__ == "__main__":
     main()
