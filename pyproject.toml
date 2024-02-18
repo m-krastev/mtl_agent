@@ -1,6 +1,6 @@
 [project]
 name = "mtl_agent"
-version = "0.1.5"
+version = "0.2.0"
 dependencies = ["ass_tag_parser", "ass", "playwright", "ffmpeg-python", "pillow", "requests"]
 authors = [{name="Matey Krastev", email="matey.krastev@outlook.com"}]
 license={text="MIT"}
@@ -17,6 +17,3 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 packages = ["mtl_agent"]
-# [build-system]
-# requires = ["hatchling"]
-# build-backend = "hatchling.build"
