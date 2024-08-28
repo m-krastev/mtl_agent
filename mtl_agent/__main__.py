@@ -89,6 +89,10 @@ def get_parser():
         action="store_true",
         help="Whether to force the encoding process even if the file already exists",
     )
+    encode_parser.add_argument(
+        "--kwargs",
+        help="Additional arguments to pass to the ffmpeg command (e.g. --kwargs '-preset=veryfast -crf=23')",
+    )
     encode_parser.set_defaults(func=encode)
     ####################### ENCODE PARSER #######################
 

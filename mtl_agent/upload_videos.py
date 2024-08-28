@@ -14,7 +14,8 @@ async def upload(file: Path, args):
     print('Dev: here')
     playwright = await async_playwright().start()
 
-    _browser = await playwright.chromium.launch(headless=False)
+    # _browser = await playwright.chromium.launch(headless=False)
+    _browser = await playwright.chromium.connect_over_cdp("http://127.0.0.1:9222/")
     browser = await _browser.new_context()
     browser.set_default_timeout(3000000)
 
