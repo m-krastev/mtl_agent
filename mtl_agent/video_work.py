@@ -28,6 +28,7 @@ def hardcode_ass_subtitle_hevc(
     input_file, subtitle, output_file, get_args: bool = True, **kwargs
 ):
     import platform
+
     input = ffmpeg.input(input_file)
     video = ffmpeg.filter(input.video, "ass", subtitle)
 
@@ -43,7 +44,7 @@ def hardcode_ass_subtitle_hevc(
         crf="25",
         bf=6,
         preset="veryfast",
-        **kwargs
+        **kwargs,
     ).overwrite_output()
 
     if get_args is True:
@@ -64,30 +65,34 @@ def hardcode_ass_subtitle_hevc(
 def hardcode_ass_subtitle_x264(
     input_file, subtitle, output_file, get_args: bool = True, audio_track=None, **kwargs
 ):
-
     import platform
+
     input = ffmpeg.input(input_file)
     video = ffmpeg.filter(input.video, "ass", subtitle)
 
+    if "vf" in kwargs:
+        video = ffmpeg.filter(video, *kwargs.pop("vf").split("="))
     audio_map = f"0:a:m:language:{audio_track}" if audio_track else "0:a"
-    # map="0:a:m:language:jpn"
+
+    default_args = {
+        "map": audio_map,
+        "format": "mp4",
+        "vcodec": "libx264",
+        # https://trac.ffmpeg.org/wiki/Encode/AAC
+        "acodec": "aac_at" if platform.system() == "Darwin" else "libfdk_aac",
+        "audio_bitrate": 128_000,
+        "crf": "22",
+        "bf": 4,
+        "preset": "veryfast",
+        "tune": "animation",
+        "movflags": "+faststart",
+        "profile:v": "high10",
+        "aq-mode": 3,
+    }
     input = ffmpeg.output(
         video,
         output_file,
-        map=audio_map,
-        format="mp4",
-        vcodec="libx264",
-        # https://trac.ffmpeg.org/wiki/Encode/AAC
-        acodec="aac_at" if platform.system() == "Darwin" else "libfdk_aac",
-        audio_bitrate=128,
-        crf="22",
-        bf=4,
-        preset="veryfast",
-        tune="animation",
-        movflags="+faststart",
-        **{"profile:v": "high10"},
-        **{"aq-mode": 3},
-        **kwargs
+        **(default_args | kwargs),
     ).overwrite_output()
 
     if get_args is True:
@@ -115,14 +120,18 @@ async def encode(input_file: Path, subtitle_file, args):
         logging.info(f"Hardcoded file already exists: {output_file.name}")
         return output_file
 
-    kwargs = {k:v for k,v in [x.split('=') for x in args.kwargs.split()]} if args.kwargs else {}
+    kwargs = (
+        {k.lstrip("-"): v for kwarg in args.kwargs for k, v in [kwarg.split(";")]}
+        if args.kwargs
+        else {}
+    )
     ffmpeg_args = (
         hardcode_ass_subtitle_x264(
             str(input_file),
             str(subtitle_file),
             str(output_file),
             audio_track=args.audio_track,
-            **kwargs
+            **kwargs,
         )
         if args.codec == "x264"
         else hardcode_ass_subtitle_hevc(

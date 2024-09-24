@@ -9,6 +9,7 @@ from pathlib import Path
 
 ROOT = Path.home() / ".config" / "mtl_agent"
 
+
 def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -91,7 +92,8 @@ def get_parser():
     )
     encode_parser.add_argument(
         "--kwargs",
-        help="Additional arguments to pass to the ffmpeg command (e.g. --kwargs '-preset=veryfast -crf=23')",
+        help="Additional arguments to pass to the ffmpeg command (e.g. --kwargs 'vf;format=yuv240p' 'crf;23' 'map')",
+        nargs="*",
     )
     encode_parser.set_defaults(func=encode)
     ####################### ENCODE PARSER #######################
@@ -119,13 +121,15 @@ def get_parser():
     )
     upload_parser.set_defaults(func=upload)
     ####################### UPLOAD PARSER #######################
-    
+
     ####################### PIPELINE PARSER #######################
-    
+
     pipeline_parser = subparsers.add_parser("pipeline")
     pipeline_parser.add_argument("file", help="File to process", type=str)
     pipeline_parser.add_argument(
-        "--subtitle", "-s", help="Ready-made subtitle file to use", 
+        "--subtitle",
+        "-s",
+        help="Ready-made subtitle file to use",
     )
     pipeline_parser.add_argument(
         "--audio_track",
@@ -134,21 +138,68 @@ def get_parser():
         default=None,
         help="Audio track to use. If not specified, will output all available audio tracks. Otherwise, must use the language code (e.g. jpn)",
     )
-    pipeline_parser.add_argument("--profile_path", "-pp", default=None, help="Path to profile to use for uploading")
-    pipeline_parser.add_argument("--secrets", default=None, help="Path to secrets.json file for translation API")
-    pipeline_parser.add_argument("--backup_path", default=None, help="Path to backup translated file")
-    pipeline_parser.add_argument("--translation_provider", "-sp", default="deepl", choices=["deepl", "google"], help="Translation API provider to use")
-    pipeline_parser.add_argument("--subtitle_track", "-st", default=0, help="Subtitle track (English) to use for translation. Default is 0")
-    pipeline_parser.add_argument("--codec", "-c", type=str, default="x264", choices=["hevc", "x264"], help="Codec to use for encoding")
-    pipeline_parser.add_argument("--force", "-f", action="store_true", help="Whether to force the encoding process even if the file already exists")
-    
-    pipeline_parser.add_argument("--video_url", "-v", help="If present, skips the vbox upload and uses the specified URL instead")
-    pipeline_parser.add_argument("--upload", "-u", action="store_true", help="Whether to upload to Vbox7, Animes-Portal etc.")
-    pipeline_parser.add_argument("--thumb", "-t", action="store_true", help="If present, changes the thumbnail of the video during the upload.")
+    pipeline_parser.add_argument(
+        "--profile_path",
+        "-pp",
+        default=None,
+        help="Path to profile to use for uploading",
+    )
+    pipeline_parser.add_argument(
+        "--secrets", default=None, help="Path to secrets.json file for translation API"
+    )
+    pipeline_parser.add_argument(
+        "--backup_path", default=None, help="Path to backup translated file"
+    )
+    pipeline_parser.add_argument(
+        "--translation_provider",
+        "-sp",
+        default="deepl",
+        choices=["deepl", "google"],
+        help="Translation API provider to use",
+    )
+    pipeline_parser.add_argument(
+        "--subtitle_track",
+        "-st",
+        default=0,
+        help="Subtitle track (English) to use for translation. Default is 0",
+    )
+    pipeline_parser.add_argument(
+        "--codec",
+        "-c",
+        type=str,
+        default="x264",
+        choices=["hevc", "x264"],
+        help="Codec to use for encoding",
+    )
+    pipeline_parser.add_argument(
+        "--force",
+        "-f",
+        action="store_true",
+        help="Whether to force the encoding process even if the file already exists",
+    )
+
+    pipeline_parser.add_argument(
+        "--video_url",
+        "-v",
+        help="If present, skips the vbox upload and uses the specified URL instead",
+    )
+    pipeline_parser.add_argument(
+        "--upload",
+        "-u",
+        action="store_true",
+        help="Whether to upload to Vbox7, Animes-Portal etc.",
+    )
+    pipeline_parser.add_argument(
+        "--thumb",
+        "-t",
+        action="store_true",
+        help="If present, changes the thumbnail of the video during the upload.",
+    )
     pipeline_parser.set_defaults(func=pipeline)
     ####################### PIPELINE PARSER #######################
-    
+
     return parser
+
 
 async def pipeline(INPUT_FILE, args):
     sub = translate(args)
@@ -156,7 +207,7 @@ async def pipeline(INPUT_FILE, args):
     if args.upload:
         out = await upload(out, args)
     return out
-    
+
 
 def main():
     parser = get_parser()
@@ -167,7 +218,10 @@ def main():
         args.root.mkdir(parents=True)
 
     logging.basicConfig(
-        handlers=[logging.FileHandler(args.root / "debug.log"), logging.StreamHandler()],
+        handlers=[
+            logging.FileHandler(args.root / "debug.log"),
+            logging.StreamHandler(),
+        ],
         level=logging.INFO,
         format="[%(asctime)s][%(levelname)-8s] %(name)s - %(message)s",
     )
@@ -179,7 +233,9 @@ def main():
         exit(1)
 
     if args.headless and args.headless not in INPUT_FILE.parts:
-        logging.error("Headless mode invoked in non-automatically managed folder. Exiting...")
+        logging.error(
+            "Headless mode invoked in non-automatically managed folder. Exiting..."
+        )
         exit(1)
 
     match args.func.__name__:
@@ -208,5 +264,7 @@ def main():
             out = asyncio.run(pipeline(INPUT_FILE, args))
 
     print(out)
+
+
 if __name__ == "__main__":
     main()

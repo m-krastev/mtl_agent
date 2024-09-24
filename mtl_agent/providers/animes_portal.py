@@ -2,12 +2,13 @@ import logging
 from .base import BaseProvider
 from playwright.async_api import BrowserContext
 
+
 class AnimesPortal(BaseProvider):
     def __init__(self, browser: BrowserContext, config):
         self.browser = browser
         self.config = config
         self.video_link = None
-    
+
     def get_cookies(self):
         return [
             {
@@ -17,10 +18,11 @@ class AnimesPortal(BaseProvider):
                 "domain": "animes-portal.info",
             },
         ]
-            
-    async def upload(self, final_url: str, episode_num: int, animes_portal_url: str):
 
-        final_url = f'<iframe src="{final_url}" frameborder="0" allowfullscreen></iframe>'
+    async def upload(self, final_url: str, episode_num: int, animes_portal_url: str):
+        final_url = (
+            f'<iframe src="{final_url}" frameborder="0" allowfullscreen></iframe>'
+        )
         page = await self.browser.new_page()
         await page.goto(animes_portal_url)
 
@@ -44,8 +46,6 @@ class AnimesPortal(BaseProvider):
         submit.click()
         logging.info("AP: Video Uploaded")
 
-
-
     async def upload_to_wall(
         self,
         final_url: str,
@@ -59,7 +59,9 @@ class AnimesPortal(BaseProvider):
             return
 
         page = await self.browser.new_page()
-        await page.goto(animes_portal_wall_url, timeout=0, wait_until="domcontentloaded")
+        await page.goto(
+            animes_portal_wall_url, timeout=0, wait_until="domcontentloaded"
+        )
 
         await page.wait_for_selector("#comments > form > span > textarea")
         await page.eval_on_selector(

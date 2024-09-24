@@ -10,8 +10,9 @@ from .providers.animes_portal import AnimesPortal
 from playwright.async_api import async_playwright
 from .providers.tubebg import TubeBG
 
+
 async def upload(file: Path, args):
-    print('Dev: here')
+    print("Dev: here")
     playwright = await async_playwright().start()
 
     # _browser = await playwright.chromium.launch(headless=False)
@@ -37,14 +38,14 @@ async def upload(file: Path, args):
     description = props.get("description", "")
     tags = props.get("tags", "")
     categories = props.get("categories", "")
-    
+
     # Upload videos
     await tubebg.upload(file, title, description, tags, categories)
-    
+
     # Close and reopen browser to avoid CloudFlare checks.
-    await browser.close() 
+    await browser.close()
     browser = await _browser.new_context()
-    
+
     # Wait for 5 seconds for the video to be processed
     await sleep(60)
     tubebg = TubeBG(browser, **profile["TUBEBG"])
@@ -79,7 +80,9 @@ async def upload(file: Path, args):
         ap = AnimesPortal(browser, profile["ANIMES_PORTAL"])
         await browser.add_cookies(ap.get_cookies())
 
-        await ap.upload_to_wall(public_url, props["animes_portal_wall"], title + "\n" + description)
+        await ap.upload_to_wall(
+            public_url, props["animes_portal_wall"], title + "\n" + description
+        )
 
     await sleep(60)
     # Clean up

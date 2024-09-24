@@ -9,6 +9,7 @@ default_config = {
     "factor": 0.25,
 }
 
+
 def generate_thumbnail(
     thumbnail_path: str,
     episode_num: int,
@@ -22,7 +23,6 @@ def generate_thumbnail(
     y=0,
     **kwargs,
 ):
-
     with Image.open(thumbnail_path) as im:
         draw = ImageDraw.Draw(im)
         episode_num = f"{episode_num:0>2}"

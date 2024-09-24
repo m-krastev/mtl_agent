@@ -10,11 +10,13 @@ class Vbox7(BaseProvider):
         self.browser = browser
         self.video_link = None
 
-    async def upload(self,filepath: str,
-    title: str = "",
-    description: str = "",
-    tags: str = "",
-    private=False,
+    async def upload(
+        self,
+        filepath: str,
+        title: str = "",
+        description: str = "",
+        tags: str = "",
+        private=False,
     ):
         # navigate
         page = await self.browser.new_page()
@@ -50,7 +52,7 @@ class Vbox7(BaseProvider):
         except:
             # video got uploaded immediately
             final_url = page.url
-            
+
         self.video_link = final_url
         return final_url
 
@@ -73,8 +75,9 @@ class Vbox7(BaseProvider):
                 "value": config["larabox_session"],
                 "path": "/",
                 "domain": ".vbox7.com",
-            }
-    ]
+            },
+        ]
+
     async def get_video_url(self) -> str:
         page = await self.browser.new_page()
         await page.goto(self.video_link)
@@ -82,14 +85,13 @@ class Vbox7(BaseProvider):
         await page.wait_for_selector("#html5player[data-src]")
         url = await page.get_attribute("#html5player", "data-src")
         url = url.replace(".mpd", "_1080.mp4")
-        
+
         # if requests.get(url).status_code == 404:
         #     raise Exception("VBOX7: Secret link not found")
 
         return url
 
     async def change_thumbnail(self, path_to_img: str):
-        
         page = await self.browser.new_page()
         await page.goto(self.video_link)
 
@@ -98,7 +100,9 @@ class Vbox7(BaseProvider):
             # if await page.title() != props["title"].format(episode_num):
             await page.wait_for_selector("#html5player[data-src]")
 
-        await page.goto(f"https://www.vbox7.com/video/{self.video_link.rpartition(':')[-1]}/edit")
+        await page.goto(
+            f"https://www.vbox7.com/video/{self.video_link.rpartition(':')[-1]}/edit"
+        )
 
         input_field = await page.query_selector("#file_change_thumb")
 

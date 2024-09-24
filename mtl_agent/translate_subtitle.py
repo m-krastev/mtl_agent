@@ -16,6 +16,7 @@ from .video_work import extract_subtitle
 def parse_assline(line):
     return ass_tag_parser.parse_ass(line)
 
+
 def convert_assline(_list):
     return ass_tag_parser.compose_ass(_list)
 
@@ -36,7 +37,10 @@ def change_styles(styles):
 
 
 def translate_subtitle_google(
-    filepath: str | Path, output_file: str | Path, styling_function: Callable, path_to_secrets: str | Path
+    filepath: str | Path,
+    output_file: str | Path,
+    styling_function: Callable,
+    path_to_secrets: str | Path,
 ):
     with open(filepath) as f:
         sub = ass.parse(f)
@@ -54,7 +58,7 @@ def translate_subtitle_google(
     with open(path_to_secrets) as f:
         secrets = json.load(f)
 
-    from google.cloud import translate # pyright: ignore
+    from google.cloud import translate  # pyright: ignore
 
     def translate_lines_google(
         text: list[str],
@@ -69,7 +73,9 @@ def translate_subtitle_google(
         parent = f"projects/{project_id}/locations/{location}"
 
         glossary = client.glossary_path(
-            project_id, "us-central1", glossary_id  # The location of the glossary
+            project_id,
+            "us-central1",
+            glossary_id,  # The location of the glossary
         )
 
         glossary_config = translate.TranslateTextGlossaryConfig(glossary=glossary)
@@ -231,9 +237,9 @@ def translate(args):
             exit(1)
 
     else:
-        SUBTITLE_FILE = INPUT_FILE.with_stem(
-            INPUT_FILE.stem + ".bg"
-        ).with_suffix(".ass")
+        SUBTITLE_FILE = INPUT_FILE.with_stem(INPUT_FILE.stem + ".bg").with_suffix(
+            ".ass"
+        )
 
     ###################### check if subtitle exists and if not, translates it
     if SUBTITLE_FILE.exists():
@@ -261,7 +267,7 @@ def translate(args):
     # Backup to MEGA
     backup = Path(args.backup_path) / SUBTITLE_FILE.parent.name / SUBTITLE_FILE.name
     backup.parent.mkdir(exist_ok=True)
-    backup.write_text(SUBTITLE_FILE.read_text(),'utf8')
+    backup.write_text(SUBTITLE_FILE.read_text(), "utf8")
     logging.info(f"Successfully translated! Backup at {backup}")
 
     return SUBTITLE_FILE
