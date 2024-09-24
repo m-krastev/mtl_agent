@@ -1,20 +1,20 @@
+import json
 import logging
+import re
+from html import unescape
+from itertools import chain
 from pathlib import Path
 from typing import Callable
+
 import ass
 import ass_tag_parser
-import json
-from html import unescape
-import re
 from requests import post
-from itertools import chain
 
 from .video_work import extract_subtitle
 
 
 def parse_assline(line):
     return ass_tag_parser.parse_ass(line)
-
 
 def convert_assline(_list):
     return ass_tag_parser.compose_ass(_list)
@@ -36,7 +36,7 @@ def change_styles(styles):
 
 
 def translate_subtitle_google(
-    filepath: str, output_file: str, styling_function: Callable, path_to_secrets
+    filepath: str | Path, output_file: str | Path, styling_function: Callable, path_to_secrets: str | Path
 ):
     with open(filepath) as f:
         sub = ass.parse(f)
@@ -54,7 +54,7 @@ def translate_subtitle_google(
     with open(path_to_secrets) as f:
         secrets = json.load(f)
 
-    from google.cloud import translate
+    from google.cloud import translate # pyright: ignore
 
     def translate_lines_google(
         text: list[str],
