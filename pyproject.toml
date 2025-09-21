@@ -1,6 +1,6 @@
 [project]
 name = "mtl_agent"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = ["ass_tag_parser", "ass", "playwright", "ffmpeg-python", "pillow", "requests", "better_ffmpeg_progress"]
 authors = [{name="Matey Krastev", email="matey.krastev@outlook.com"}]
 license={text="MIT"}
@@ -15,5 +15,5 @@ mtl_agent = "mtl_agent.__main__:main"
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-packages = ["mtl_agent"]
+[tool.setuptools.packages.find]
+where = ["mtl_agent"]
