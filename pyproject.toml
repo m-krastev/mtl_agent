@@ -1,6 +1,6 @@
 [project]
 name = "mtl_agent"
-version = "0.3.1.b"
+version = "0.3.2"
 dependencies = ["ass_tag_parser", "ass", "playwright", "ffmpeg-python", "pillow", "requests", "better_ffmpeg_progress"]
 authors = [{name="Matey Krastev", email="matey.krastev@outlook.com"}]
 license={text="MIT"}
