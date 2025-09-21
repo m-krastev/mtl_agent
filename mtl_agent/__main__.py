@@ -92,8 +92,15 @@ def get_parser():
     )
     encode_parser.add_argument(
         "--kwargs",
-        help="Additional arguments to pass to the ffmpeg command (e.g. --kwargs 'vf;format=yuv240p' 'crf;23' 'map')",
+        help="Additional arguments to pass to ffmpeg (e.g., --kwargs vf=format=yuv420p crf=23)",
         nargs="*",
+    )
+    encode_parser.add_argument(
+        "--progress-bar",
+        "-pb",
+        default=True,
+        action=argparse.BooleanOptionalAction,
+        help="Whether to show a progress bar during encoding",
     )
     encode_parser.set_defaults(func=encode)
     ####################### ENCODE PARSER #######################
@@ -203,7 +210,7 @@ def get_parser():
 
 async def pipeline(INPUT_FILE, args):
     sub = translate(args)
-    out = await encode(INPUT_FILE, sub, args)
+    out = encode(INPUT_FILE, sub, args)
     if args.upload:
         out = await upload(out, args)
     return out
@@ -238,30 +245,26 @@ def main():
         )
         exit(1)
 
-    match args.func.__name__:
-        case "translate":
-            args.backup_path = args.backup_path or args.root / "Translations"
-            args.secrets = args.secrets or args.root / "secrets.json"
-            out = translate(args)
-
-        case "encode":
-            subtitle_file = Path(args.subtitle).resolve()
-            out = asyncio.run(encode(INPUT_FILE, subtitle_file, args))
-
-        case "upload":
-            args.profile_path = args.profile_path or args.root / "profile_default.json"
-
-            output_file = Path(args.file).resolve()
-            out = asyncio.run(upload(output_file, args))
-
-        case "pipeline":
-            args.profile_path = args.profile_path or args.root / "profile_default.json"
-            args.profile_path = Path(args.profile_path).resolve()
-            args.backup_path = args.backup_path or args.root / "Translations"
-            args.backup_path = Path(args.backup_path).resolve()
-            args.secrets = args.secrets or args.root / "secrets.json"
-            args.secrets = Path(args.secrets).resolve()
-            out = asyncio.run(pipeline(INPUT_FILE, args))
+    func_name = args.func.__name__
+    if func_name == "translate":
+        args.backup_path = args.backup_path or args.root / "Translations"
+        args.secrets = args.secrets or args.root / "secrets.json"
+        out = translate(args)
+    elif func_name == "encode":
+        subtitle_file = Path(args.subtitle).resolve()
+        out = encode(INPUT_FILE, subtitle_file, args)
+    elif func_name == "upload":
+        args.profile_path = args.profile_path or args.root / "profile_default.json"
+        output_file = Path(args.file).resolve()
+        out = asyncio.run(upload(output_file, args))
+    elif func_name == "pipeline":
+        args.profile_path = args.profile_path or args.root / "profile_default.json"
+        args.profile_path = Path(args.profile_path).resolve()
+        args.backup_path = args.backup_path or args.root / "Translations"
+        args.backup_path = Path(args.backup_path).resolve()
+        args.secrets = args.secrets or args.root / "secrets.json"
+        args.secrets = Path(args.secrets).resolve()
+        out = asyncio.run(pipeline(INPUT_FILE, args))
 
     print(out)
 
