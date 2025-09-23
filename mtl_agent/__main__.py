@@ -65,7 +65,7 @@ def get_parser():
     encode_parser = subparsers.add_parser("encode")
     encode_parser.add_argument("file", help="File to process", type=str)
     encode_parser.add_argument(
-        "--subtitle", "-s", help="Ready-made subtitle file to use", required=True
+        "--subtitle", "-s", help="Ready-made subtitle file to use"
     )
     encode_parser.add_argument(
         "--audio_track",
@@ -235,10 +235,6 @@ def main():
 
     INPUT_FILE = Path(args.file).resolve()
 
-    if INPUT_FILE.is_dir():
-        logging.info("Program called with folder instead of a file")
-        exit(1)
-
     if args.headless and args.headless not in INPUT_FILE.parts:
         logging.error(
             "Headless mode invoked in non-automatically managed folder. Exiting..."
@@ -249,14 +245,69 @@ def main():
     if func_name == "translate":
         args.backup_path = args.backup_path or args.root / "Translations"
         args.secrets = args.secrets or args.root / "secrets.json"
-        out = translate(args)
+        if INPUT_FILE.is_dir():
+            logging.info(f"Running in batch mode for folder: {INPUT_FILE}")
+            subtitle_files = sorted(
+                list(INPUT_FILE.glob("*.srt")) + list(INPUT_FILE.glob("*.ass"))
+            )
+            if not subtitle_files:
+                logging.error("No subtitle files found in the directory.")
+                exit(1)
+
+            for subtitle_file in subtitle_files:
+                logging.info(f"Translating '{subtitle_file.name}'")
+                args.file = str(subtitle_file)
+                translate(args)
+            exit(0)
+        else:
+            out = translate(args)
     elif func_name == "encode":
-        subtitle_file = Path(args.subtitle).resolve()
-        out = encode(INPUT_FILE, subtitle_file, args)
+        if INPUT_FILE.is_dir():
+            logging.info(f"Running in batch mode for folder: {INPUT_FILE}")
+            video_files = sorted(
+                list(INPUT_FILE.glob("*.mkv")) + list(INPUT_FILE.glob("*.mp4"))
+            )
+            subtitle_files = sorted(
+                list(INPUT_FILE.glob("*.srt")) + list(INPUT_FILE.glob("*.ass"))
+            )
+
+            if not video_files:
+                logging.error("No video files found in the directory.")
+                exit(1)
+
+            if not subtitle_files:
+                logging.error("No subtitle files found in the directory.")
+                exit(1)
+
+            for video_file, subtitle_file in zip(video_files, subtitle_files):
+                logging.info(
+                    f"Processing '{video_file.name}' with subtitle '{subtitle_file.name}'"
+                )
+                encode(video_file.resolve(), subtitle_file.resolve(), args)
+            exit(0)
+        else:
+            if not args.subtitle:
+                parser.error("the following arguments are required: --subtitle/-s")
+            subtitle_file = Path(args.subtitle).resolve()
+            out = encode(INPUT_FILE, subtitle_file, args)
     elif func_name == "upload":
         args.profile_path = args.profile_path or args.root / "profile_default.json"
-        output_file = Path(args.file).resolve()
-        out = asyncio.run(upload(output_file, args))
+        if INPUT_FILE.is_dir():
+            logging.info(f"Running in batch mode for folder: {INPUT_FILE}")
+            video_files = sorted(
+                list(INPUT_FILE.glob("*.mkv")) + list(INPUT_FILE.glob("*.mp4"))
+            )
+            if not video_files:
+                logging.error("No video files found in the directory.")
+                exit(1)
+
+            for video_file in video_files:
+                logging.info(f"Uploading '{video_file.name}'")
+                asyncio.run(upload(video_file, args))
+            exit(0)
+        else:
+            output_file = Path(args.file).resolve()
+            out = asyncio.run(upload(output_file, args))
     elif func_name == "pipeline":
         args.profile_path = args.profile_path or args.root / "profile_default.json"
         args.profile_path = Path(args.profile_path).resolve()

@@ -187,7 +187,8 @@ def encode(input_file: Path, subtitle_file, args):
                 msg = f"Process did not complete successfully (Code: {process.return_code})."
                 logging.error(msg)
         except Exception as e:
-            logging.error(f"Failed to start ffmpeg process: {e}")
+            # TODO: Remove once the patch is merged into better_ffmpeg_progress
+            # logging.error(f"Failed to start ffmpeg process: {e}")
             # Try to recover in case better_ffmpeg_progress is not up to date
             try:
                 process = FfmpegProcess(ffmpeg_args, ffmpeg_log_level="info")
