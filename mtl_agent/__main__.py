@@ -57,6 +57,16 @@ def get_parser():
         default=None,
         help="Path to secrets.json file for translation API",
     )
+    translate_parser.add_argument(
+        "--source_language",
+        default="en",
+        help="Source language code (e.g., en, ja, fr, etc.)",
+    )
+    translate_parser.add_argument(
+        "--target_language",
+        default="bg",
+        help="Target language code (e.g., en, ja, fr, etc.)",
+    )
 
     translate_parser.set_defaults(func=translate)
     ####################### TRANSLATE PARSER #######################
